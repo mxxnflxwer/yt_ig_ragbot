@@ -3,7 +3,7 @@ from app.services.rag_service import ask
 
 session_id = "test_rag_001"
 
-# Embed test transcripts
+
 transcript_a = """
 Welcome to this video about content creation. Today we are going to talk about 
 how to grow your audience on social media. The most important thing is consistency.
