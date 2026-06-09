@@ -66,7 +66,10 @@ async def ingest(request: IngestRequest):
         engagement_rate=ig_data["engagement_rate"],
         transcript_chunks=ig_chunks,
     )
-
+    # Store metadata in RAG context so LLM knows exact numbers
+    from app.services.rag_service import set_video_context
+    set_video_context(session_id, yt_data, ig_data)
+    
     return IngestResponse(
         success=True,
         session_id=session_id,

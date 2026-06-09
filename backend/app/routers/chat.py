@@ -15,40 +15,31 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
     async def stream():
+       async def stream():
         try:
-            sources = []
+            sources      = []
+            full_answer  = ""
 
             async for chunk in chain.astream({"question": request.message}):
                 if "answer" in chunk and chunk["answer"]:
-                    yield {
-                        "data": json.dumps({
-                            "type":    "token",
-                            "content": chunk["answer"],
-                        })
-                    }
+                    token = chunk["answer"]
+                    # Skip if this chunk IS the full answer (dedup)
+                    if token != full_answer:
+                        full_answer += token
+                        yield {
+                            "data": json.dumps({
+                                "type":    "token",
+                                "content": token,
+                            })
+                        }
                 if "source_documents" in chunk:
                     sources = get_sources(chunk["source_documents"])
 
-            yield {
-                "data": json.dumps({
-                    "type":    "sources",
-                    "content": sources,
-                })
-            }
-            yield {
-                "data": json.dumps({"type": "done"})
-            }
+            yield {"data": json.dumps({"type": "sources", "content": sources})}
+            yield {"data": json.dumps({"type": "done"})}
 
         except Exception as e:
-            yield {
-                "data": json.dumps({
-                    "type":    "error",
-                    "content": str(e),
-                })
-            }
-
-    return EventSourceResponse(stream())
-
+            yield {"data": json.dumps({"type": "error", "content": str(e)})}
 
 @router.post("/chat/sync", response_model=ChatResponse)
 async def chat_sync(request: ChatRequest):
