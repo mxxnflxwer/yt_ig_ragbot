@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     youtube_api_key: str
     chroma_persist_dir: str = "./chroma_db"
     embedding_model: str = "all-MiniLM-L6-v2"
-    groq_llm_model: str = "llama-3.1-70b-versatile"
+    groq_llm_model: str = "llama-3.3-70b-versatile"
     frontend_origin: str = "http://localhost:5173"
 
 
