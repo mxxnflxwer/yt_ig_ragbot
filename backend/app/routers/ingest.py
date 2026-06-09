@@ -26,6 +26,8 @@ async def ingest(request: IngestRequest):
 
     # Chunk and embed both transcripts
     try:
+        print(f"[debug] yt_data keys: {list(yt_data.keys())}")
+        print(f"[debug] ig_data keys: {list(ig_data.keys())}")
         yt_chunks = chunk_and_embed(session_id, "A", yt_data["transcript"], yt_data)
         ig_chunks = chunk_and_embed(session_id, "B", ig_data["transcript"], ig_data)
     except Exception as e:

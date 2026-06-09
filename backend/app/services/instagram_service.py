@@ -125,6 +125,6 @@ def get_instagram_data(url: str) -> dict:
         "hashtags":         hashtags,
         "upload_date":      (post.get("timestamp") or "")[:10],
         "duration_seconds": int(post.get("videoDuration") or 0),
-        "transcript":       transcript if len(transcript) > 20 else caption,
+        "transcript":       transcript if len(transcript) > 50 else caption,
         "engagement_rate":  compute_engagement_rate(likes, comments, views),
     }
