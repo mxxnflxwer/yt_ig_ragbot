@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     groq_api_key: str
     apify_api_token: str
     apify_actor_id: str = "apify/instagram-scraper"
+    youtube_api_key: str
     chroma_persist_dir: str = "./chroma_db"
     embedding_model: str = "all-MiniLM-L6-v2"
     groq_llm_model: str = "llama-3.1-70b-versatile"
