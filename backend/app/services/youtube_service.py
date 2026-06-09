@@ -79,4 +79,13 @@ def get_youtube_data(url: str) -> dict:
         "url":              url,
         "title":            snippet.get("title", "Unknown"),
         "creator_name":     snippet.get("channelTitle", "Unknown"),
+        "follower_count":   follower_count,
+        "views":            views,
+        "likes":            likes,
+        "comments":         comments,
+        "hashtags":         hashtags,
+        "upload_date":      snippet.get("publishedAt", "")[:10],
+        "duration_seconds": parse_duration(content.get("duration", "")),
+        "transcript":       transcript,
+        "engagement_rate":  compute_engagement_rate(likes, comments, views),
     }
