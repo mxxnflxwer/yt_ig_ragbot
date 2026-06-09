@@ -15,7 +15,6 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
     async def stream():
-       async def stream():
         try:
             sources      = []
             full_answer  = ""
@@ -40,6 +39,8 @@ async def chat(request: ChatRequest):
 
         except Exception as e:
             yield {"data": json.dumps({"type": "error", "content": str(e)})}
+
+    return EventSourceResponse(stream())
 
 @router.post("/chat/sync", response_model=ChatResponse)
 async def chat_sync(request: ChatRequest):

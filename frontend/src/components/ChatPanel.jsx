@@ -58,7 +58,11 @@ export default function ChatPanel({ sessionId }) {
             if (data.type === "token") {
               setMessages((prev) => {
                 const updated = [...prev]
-                updated[updated.length - 1].content += data.content
+                const lastIdx = updated.length - 1
+                updated[lastIdx] = {
+                  ...updated[lastIdx],
+                  content: updated[lastIdx].content + data.content,
+                }
                 return updated
               })
             }
@@ -66,7 +70,11 @@ export default function ChatPanel({ sessionId }) {
             if (data.type === "sources") {
               setMessages((prev) => {
                 const updated = [...prev]
-                updated[updated.length - 1].sources = data.content
+                const lastIdx = updated.length - 1
+                updated[lastIdx] = {
+                  ...updated[lastIdx],
+                  sources: data.content,
+                }
                 return updated
               })
             }
@@ -76,7 +84,11 @@ export default function ChatPanel({ sessionId }) {
     } catch (e) {
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1].content = "Error: " + e.message
+        const lastIdx = updated.length - 1
+        updated[lastIdx] = {
+          ...updated[lastIdx],
+          content: "Error: " + e.message,
+        }
         return updated
       })
     } finally {
