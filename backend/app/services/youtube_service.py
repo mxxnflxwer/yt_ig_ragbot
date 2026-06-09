@@ -79,3 +79,4 @@ def get_youtube_data(url: str) -> dict:
         "url":              url,
         "title":            snippet.get("title", "Unknown"),
         "creator_name":     snippet.get("channelTitle", "Unknown"),
+    }
