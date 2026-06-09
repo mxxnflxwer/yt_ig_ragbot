@@ -66,7 +66,7 @@ def get_youtube_data(url: str) -> dict:
     try:
         ytt_api  = YouTubeTranscriptApi()
         fetched  = ytt_api.fetch(video_id)
-        transcript = " ".join(snippet.text for snippet in fetched)
+        transcript = " ".join(seg.text for seg in fetched)
     except Exception:
         transcript = ""
 
