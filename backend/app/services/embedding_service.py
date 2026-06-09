@@ -46,8 +46,8 @@ def chunk_and_embed(
         return 0
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,       # ~500 chars per chunk
-        chunk_overlap=50,     # 50 char overlap for context continuity
+        chunk_size=200,       # ~500 chars per chunk
+        chunk_overlap=30,     # 50 char overlap for context continuity
         separators=["\n\n", "\n", ". ", " ", ""],
     )
 
