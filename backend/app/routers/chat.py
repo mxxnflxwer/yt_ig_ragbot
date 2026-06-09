@@ -16,27 +16,21 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail=f"Session not found: {str(e)}")
 
     async def stream():
+       async def stream():
         try:
-            sources     = []
-            full_answer = ""
+            sources      = []
+            seen_content = set()
 
-            # Stream tokens from Groq via LangChain
             async for chunk in chain.astream({"question": request.message}):
-                # astream yields dicts with "answer" key for tokens
                 if "answer" in chunk:
                     token = chunk["answer"]
-                    full_answer += token
-                    # Send token as SSE
-                    yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+                    if token and token not in seen_content:
+                        yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
 
-                # Capture source documents from final chunk
                 if "source_documents" in chunk:
                     sources = get_sources(chunk["source_documents"])
 
-            # Send sources after streaming completes
             yield f"data: {json.dumps({'type': 'sources', 'content': sources})}\n\n"
-
-            # Send done signal
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
         except Exception as e:
