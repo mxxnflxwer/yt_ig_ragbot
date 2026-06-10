@@ -7,9 +7,10 @@ export default function VideoCard({ video, label }) {
       <div className="video-meta">
         <p><strong>Title</strong>: {video.title}</p>
         <p><strong>Creator</strong>: {video.creator_name}</p>
-        {video.follower_count && (
-          <p><strong>Followers</strong>: {video.follower_count.toLocaleString()}</p>
-        )}
+        <p>
+          <strong>{video.platform === "youtube" ? "Subscribers" : "Followers"}</strong>:{" "}
+          {video.follower_count != null ? video.follower_count.toLocaleString() : "N/A"}
+        </p>
         <p><strong>Platform</strong>: {video.platform}</p>
         <p><strong>Upload Date</strong>: {video.upload_date}</p>
         <p><strong>Duration</strong>: {video.duration_seconds}s</p>
