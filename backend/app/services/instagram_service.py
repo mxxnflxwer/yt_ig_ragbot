@@ -6,8 +6,7 @@ import yt_dlp
 from app.config import get_settings
 from app.utils.engagement import compute_engagement_rate
 
-# Absolute path for audio file
-BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 AUDIO_PATH = os.path.join(BASE_DIR, "reel_audio")
 FFMPEG_BIN = r"C:\Users\mathimalar\Downloads\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin"
 
@@ -34,6 +33,56 @@ def transcribe_audio(file_path: str) -> str:
     model  = whisper.load_model("base")
     result = model.transcribe(file_path)
     return result["text"].strip()
+
+
+def get_instagram_followers(username: str, settings) -> int | None:
+    """Fetch follower count via Apify Instagram profile scraper."""
+    if not username:
+        return None
+    try:
+        run_response = httpx.post(
+            "https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs",
+            headers={"Authorization": f"Bearer {settings.apify_api_token}"},
+            json={"usernames": [username]},
+            timeout=30,
+        )
+        run_response.raise_for_status()
+        run_id = run_response.json()["data"]["id"]
+        print(f"[instagram] profile scraper run: {run_id}")
+
+        status_resp = None
+        for _ in range(12):
+            time.sleep(5)
+            status_resp = httpx.get(
+                f"https://api.apify.com/v2/actor-runs/{run_id}",
+                headers={"Authorization": f"Bearer {settings.apify_api_token}"},
+                timeout=15,
+            )
+            status = status_resp.json()["data"]["status"]
+            print(f"[instagram] profile status: {status}")
+            if status == "SUCCEEDED":
+                break
+            if status in ("FAILED", "ABORTED", "TIMED-OUT"):
+                return None
+
+        if not status_resp:
+            return None
+
+        dataset_id = status_resp.json()["data"]["defaultDatasetId"]
+        items = httpx.get(
+            f"https://api.apify.com/v2/datasets/{dataset_id}/items",
+            headers={"Authorization": f"Bearer {settings.apify_api_token}"},
+            timeout=15,
+        ).json()
+
+        if items:
+            count = items[0].get("followersCount") or items[0].get("followers")
+            print(f"[instagram] followers found: {count}")
+            return int(count) if count else None
+
+    except Exception as e:
+        print(f"[instagram] follower fetch failed: {e}")
+    return None
 
 
 def get_instagram_data(url: str) -> dict:
@@ -84,11 +133,15 @@ def get_instagram_data(url: str) -> dict:
     if not results:
         raise ValueError("Apify returned no results for this Instagram URL")
 
-    post    = results[0]
-    caption = post.get("caption") or ""
+    post     = results[0]
+    caption  = post.get("caption") or ""
+    username = post.get("ownerUsername") or ""
     hashtags = [word for word in caption.split() if word.startswith("#")]
 
-    # Step 4: Whisper transcription
+    # Step 4: Get follower count from profile scraper
+    follower_count = get_instagram_followers(username, settings)
+
+    # Step 5: Whisper transcription
     video_url  = post.get("videoUrl") or post.get("url") or ""
     transcript = ""
     audio_file = None
@@ -109,22 +162,26 @@ def get_instagram_data(url: str) -> dict:
     else:
         transcript = caption
 
-    views    = int(post.get("videoViewCount") or post.get("playCount") or 0)
-    likes    = int(post.get("likesCount") or post.get("likes") or 0)
-    comments = int(post.get("commentsCount") or post.get("comments") or 0)
+    # Use caption if transcript too short
+    if len(transcript.strip()) < 50:
+        transcript = caption
+
+    views    = int(post.get("videoViewCount") or post.get("videoPlayCount") or 0)
+    likes    = int(post.get("likesCount") or 0)
+    comments = int(post.get("commentsCount") or 0)
 
     return {
         "platform":         "instagram",
         "url":              url,
         "title":            caption[:100] if caption else "Instagram Reel",
-        "creator_name":     post.get("ownerUsername") or post.get("owner", {}).get("username", "Unknown"),
-        "follower_count":   post.get("ownerFollowersCount") or post.get("owner", {}).get("followersCount"),
+        "creator_name":     username or "Unknown",
+        "follower_count":   follower_count,
         "views":            views,
         "likes":            likes,
         "comments":         comments,
         "hashtags":         hashtags,
         "upload_date":      (post.get("timestamp") or "")[:10],
         "duration_seconds": int(post.get("videoDuration") or 0),
-        "transcript":       transcript if len(transcript) > 50 else caption,
+        "transcript":       transcript,
         "engagement_rate":  compute_engagement_rate(likes, comments, views),
     }
