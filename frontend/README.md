@@ -1,16 +1,91 @@
-# React + Vite
+# YT x IG RAG Chatbot
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack RAG chatbot that takes two social media video URLs (YouTube or Instagram Reels) and lets you have an AI-powered conversation about them.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Takes any two video URLs as input
+- Extracts metadata: views, likes, comments, followers, hashtags, upload date, duration
+- Computes engagement rate: ((likes + comments) / views) × 100
+- Transcribes audio using Whisper
+- Chunks and embeds transcripts into ChromaDB
+- Lets you chat with an AI that cites which video and chunk it's answering from
+- Streams responses in real time
 
-## React Compiler
+## Tech Stack and Why
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **FastAPI** — async Python backend, perfect for streaming and ML tooling
+- **React + Vite** — lightweight SPA, no SSR needed, fast dev experience
+- **Groq (Llama 3.3 70B)** — free, faster than OpenAI, strong reasoning for RAG
+- **HuggingFace all-MiniLM-L6-v2** — free local embeddings, zero API cost
+- **ChromaDB** — zero infrastructure vector DB, persists to disk
+- **LangChain** — handles RAG chain, conversation memory, retrieval
+- **Whisper (base)** — free local audio transcription
+- **YouTube Data API v3** — official, reliable, 10k free units/day
+- **Apify Instagram Scraper** — most reliable Instagram data source
 
-## Expanding the ESLint configuration
+## Cost at Scale — 1000 Creators/Day
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Component | Demo Cost | At Scale Solution | Cost |
+|---|---|---|---|
+| LLM | Free (Groq) | Together.ai Llama | ~$1/day |
+| Embeddings | Free (local) | Keep local or batch | $0 |
+| Transcription | Free (local Whisper) | Groq Whisper API | ~$0.50/day |
+| Vector DB | Free (ChromaDB) | Qdrant Cloud | ~$70/month |
+| Instagram Data | ~$0.005/run (Apify) | Apify paid plan | ~$50/month |
+| YouTube Data | Free (API quota) | Paid quota increase | ~$10/month |
+| **Total** | **~$0.01/pair** | | **~$150/month** |
+
+This stack is the most cost-efficient because:
+- Groq is 97% cheaper than GPT-4o for the same RAG quality
+- Local embeddings eliminate the biggest hidden cost at scale
+- Local Whisper is free vs $0.00025/min on AssemblyAI
+
+## Setup
+
+### Requirements
+- Python 3.11
+- Node.js 18+
+- ffmpeg in system PATH
+
+### Backend
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+# add your API keys to .env
+uvicorn app.main:app --reload --port 8000
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Environment Variables
+
+See `.env.example` for all required keys:
+- `GROQ_API_KEY` — from console.groq.com
+- `YOUTUBE_API_KEY` — from Google Cloud Console
+- `APIFY_API_TOKEN` — from apify.com
+
+## Sample Questions
+
+- What is the engagement rate of each video?
+- Who is the creator of Video B and what is their follower count?
+- Compare the hooks in the first 5 seconds
+- Why did Video A get more engagement than Video B?
+- Suggest improvements for the lower performing video
+
+## Architecture
+
+```
+URL → Platform Detection → Metadata Extraction → Whisper Transcription
+    → Chunking (200 chars, 30 overlap) → HuggingFace Embeddings
+    → ChromaDB (tagged video_id A/B) → LangChain RAG Chain
+    → Groq Llama 3.3 70B → SSE Streaming → React Frontend
+```
