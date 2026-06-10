@@ -1,36 +1,37 @@
 import { useState } from "react"
 
 export default function UrlInput({ onIngest, loading, error }) {
-  const [youtubeUrl, setYoutubeUrl]     = useState("")
-  const [instagramUrl, setInstagramUrl] = useState("")
+  const [urlA, setUrlA] = useState("")
+  const [urlB, setUrlB] = useState("")
 
   const handleSubmit = () => {
-    if (!youtubeUrl || !instagramUrl) return
-    onIngest(youtubeUrl, instagramUrl)
+    if (!urlA || !urlB) return
+    onIngest(urlA, urlB)
   }
 
   return (
     <div className="url-input-container">
-      <h2>Enter Video URLs</h2>
+      <h2>Enter Two Video URLs</h2>
+      <p className="url-hint">Supports YouTube vs YouTube, Instagram vs Instagram, or YouTube vs Instagram</p>
       <div className="url-inputs">
         <input
           type="text"
-          placeholder="YouTube URL"
-          value={youtubeUrl}
-          onChange={(e) => setYoutubeUrl(e.target.value)}
+          placeholder="Video A — YouTube or Instagram Reel URL"
+          value={urlA}
+          onChange={(e) => setUrlA(e.target.value)}
           className="url-field"
         />
         <input
           type="text"
-          placeholder="Instagram Reel URL"
-          value={instagramUrl}
-          onChange={(e) => setInstagramUrl(e.target.value)}
+          placeholder="Video B — YouTube or Instagram Reel URL"
+          value={urlB}
+          onChange={(e) => setUrlB(e.target.value)}
           className="url-field"
         />
       </div>
       <button
         onClick={handleSubmit}
-        disabled={loading || !youtubeUrl || !instagramUrl}
+        disabled={loading || !urlA || !urlB}
         className="analyze-btn"
       >
         {loading ? "Analyzing... (this may take a minute)" : "Analyze Videos"}

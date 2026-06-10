@@ -5,23 +5,20 @@ import ChatPanel from "./components/ChatPanel"
 import "./App.css"
 
 function App() {
-  const [sessionId, setSessionId]   = useState(null)
-  const [videoA, setVideoA]         = useState(null)
-  const [videoB, setVideoB]         = useState(null)
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState(null)
+  const [sessionId, setSessionId] = useState(null)
+  const [videoA, setVideoA]       = useState(null)
+  const [videoB, setVideoB]       = useState(null)
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState(null)
 
-  const handleIngest = async (youtubeUrl, instagramUrl) => {
+  const handleIngest = async (urlA, urlB) => {
     setLoading(true)
     setError(null)
     try {
       const res = await fetch("http://localhost:8000/api/ingest", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          youtube_url:   youtubeUrl,
-          instagram_url: instagramUrl,
-        }),
+        body:    JSON.stringify({ url_a: urlA, url_b: urlB }),
       })
       if (!res.ok) {
         const err = await res.json()
@@ -42,7 +39,7 @@ function App() {
     <div className="app">
       <header className="header">
         <h1>🎬 RAG Video Analyst</h1>
-        <p>Compare YouTube & Instagram Reels with AI</p>
+        <p>Compare any two videos with AI</p>
       </header>
 
       {!sessionId && (
@@ -52,8 +49,8 @@ function App() {
       {sessionId && (
         <>
           <div className="video-cards">
-            <VideoCard video={videoA} label="Video A — YouTube" />
-            <VideoCard video={videoB} label="Video B — Instagram" />
+            <VideoCard video={videoA} label={`Video A — ${videoA?.platform}`} />
+            <VideoCard video={videoB} label={`Video B — ${videoB?.platform}`} />
           </div>
           <ChatPanel sessionId={sessionId} />
         </>

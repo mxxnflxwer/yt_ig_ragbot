@@ -3,8 +3,8 @@ from typing import Optional
 
 
 class IngestRequest(BaseModel):
-    youtube_url: str
-    instagram_url: str
+    url_a: str
+    url_b: str
 
 
 class VideoMetadata(BaseModel):
